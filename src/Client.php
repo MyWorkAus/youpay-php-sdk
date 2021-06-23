@@ -21,7 +21,7 @@ class Client
     /**
      * @var string API Url
      */
-    public $api_url = 'https://api.youpay.ai/';
+    public $api_url = 'https://v1.youpay.ai/';
 
     /**
      * @var string APP Url
@@ -89,7 +89,7 @@ class Client
     public function login($email, $password, $domain, $store_type)
     {
         return json_decode(
-            $response = $this->client()->post('/api/login', [
+            $this->client()->post('/v1/login', [
                 'json' => [
                     'email'      => $email,
                     'password'   => $password,
@@ -112,7 +112,7 @@ class Client
     public function fetchToken($email, $password)
     {
         return json_decode(
-            $this->client()->post('/api/fetch-token', [
+            $this->client()->post('/v1/fetch-token', [
                 'json' => [
                     'email'      => $email,
                     'password'   => $password
@@ -131,13 +131,7 @@ class Client
     public function listOrders($limit = 10)
     {
         return $this->handleResponse(
-            $this->client()
-                ->post('/api/order/list', [
-                    'json' => [
-                        'store_id' => $this->store_id,
-	                    'limit' => $limit
-                    ]
-                ])
+            $this->client()->get('/v1/order?store_id=' . $this->store_id . '&limit=' . $limit)
         );
     }
 
@@ -150,14 +144,9 @@ class Client
     public function listAllOrders($limit = 10)
     {
         return $this->handleResponse(
-            $this->client()->post('/api/order/list', [
-	            'json' => [
-		            'limit' => $limit
-	            ]
-            ])
+            $this->client()->post('/v1/orders?limit=' . $limit)
         );
     }
-
 
 	/**
 	 * List All Store Payments
@@ -169,13 +158,7 @@ class Client
 	public function listPayments($limit = 10)
 	{
 		return $this->handleResponse(
-			$this->client()
-			     ->post('/api/payments/list', [
-				     'json' => [
-					     'store_id' => $this->store_id,
-					     'limit' => $limit
-				     ]
-			     ])
+			$this->client()->get('/v1/payments?limit=' . $limit)
 		);
 	}
 
@@ -188,11 +171,7 @@ class Client
 	public function listAllPayments($limit = 10)
 	{
 		return $this->handleResponse(
-			$this->client()->post('/api/payments/list', [
-				'json' => [
-					'limit' => $limit
-				]
-			])
+			$this->client()->get('/v1/payments?limit=' . $limit)
 		);
 	}
 
@@ -202,21 +181,60 @@ class Client
      * @param Order $order
      * @param mixed $params Extra data to pass to the request
      * @return mixed
+     * @deprecated
      * @throws \Exception Bad Response Exception.
      */
     public function postOrder(Order $order, $params = null)
     {
-        $path = ($order->youpay_id) ? "/api/order/{$order->youpay_id}" : '/api/order/create';
+        if ($order->youpay_id) {
+            return  $this->updateOrder($order, $params);
+        }
+        return $this->createOrder($order, $params);
+    }
 
+    /**
+     * Create a new order
+     *
+     * @param  Order  $order
+     * @param  null  $params
+     *
+     * @return mixed|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function createOrder(Order $order, $params = null)
+    {
         return $this->handleResponse(
             $this->client()
-                ->post($path, [
-                    'json' => [
-                        'order' => $order,
-                        'store_id' => $this->store_id,
-	                    'params' => $params
-                    ]
-                ])
+                 ->post('/v1/order', [
+                     'json' => [
+                         'order' => $order,
+                         'store_id' => $this->store_id,
+                         'params' => $params
+                     ]
+                 ])
+        );
+    }
+
+    /**
+     * Update existing order
+     *
+     * @param  Order  $order
+     * @param  null  $params
+     *
+     * @return mixed|null
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function updateOrder(Order $order, $params = null)
+    {
+        return $this->handleResponse(
+            $this->client()
+                 ->put("/v1/order/$order->youpay_id", [
+                     'json' => [
+                         'order' => $order,
+                         'store_id' => $this->store_id,
+                         'params' => $params
+                     ]
+                 ])
         );
     }
 
@@ -230,7 +248,7 @@ class Client
     public function getOrder($id)
     {
         return $this->handleResponse(
-            $this->client()->get('/api/order/' . $id)
+            $this->client()->get('/v1/order/' . $id)
         );
     }
 
@@ -245,7 +263,7 @@ class Client
     public function cancelOrder($id)
     {
 	    return $this->handleResponse(
-		    $this->client()->get('/api/order/' . $id . '/cancel')
+		    $this->client()->get('/v1/order/' . $id . '/cancel')
 	    );
     }
 
@@ -262,7 +280,7 @@ class Client
     		$id = $this->store_id;
 	    }
         return $this->handleResponse(
-            $this->client()->get('/api/store/' . $id)
+            $this->client()->get('/v1/store/' . $id)
         );
     }
 
@@ -275,7 +293,7 @@ class Client
     public function listStores()
     {
         return $this->handleResponse(
-            $this->client()->get('/api/stores/list')
+            $this->client()->get('/v1/stores')
         );
     }
 
@@ -289,7 +307,7 @@ class Client
     {
         return $this->handleResponse(
             $this->client()
-                ->post('/api/stores/find', [
+                ->post('/v1/stores/find', [
                     'json' => [
                         'domain' => $domain
                     ]
@@ -310,7 +328,7 @@ class Client
     {
         return $this->handleResponse(
             $this->client()
-                ->post('/api/store/' . $this->store_id, [
+                ->put('/v1/store/' . $this->store_id, [
                     'json' => [
                         'title' => $title,
                         'logo' => $logo,
@@ -433,7 +451,7 @@ class Client
     public function link($url = '/dashboards/main')
     {
 	    return $this->handleResponse(
-		    $this->client()->post('/api/magic-link', [
+		    $this->client()->post('/v1/magic-link', [
 			    'json' => [
 				    'url' => $url
 			    ]

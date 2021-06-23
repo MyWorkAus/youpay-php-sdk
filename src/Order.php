@@ -31,6 +31,11 @@ class Order
     public $order_items = [];
 
     /**
+     * @var array
+     */
+    public $order_totals = [];
+
+    /**
      * @var Receiver|null
      */
     public $receiver;
@@ -79,6 +84,12 @@ class Order
             }
         }
 
+        if ( ! empty( $fillable['order_totals'] ) && is_array( $fillable['order_totals'] ) ) {
+            foreach ($fillable['order_totals'] as $order_total) {
+                $self->create_order_item($order_total);
+            }
+        }
+
         if ( ! empty($fillable['receiver'])) {
             if (! $fillable['receiver'] instanceof Receiver) {
                 $fillable['receiver'] = Receiver::create($fillable['receiver']);
@@ -94,7 +105,7 @@ class Order
     /**
      * Create Order Item
      *
-     * @param $fillable
+     * @param $item
      * @return $this
      */
     public function create_order_item($item)
@@ -109,9 +120,27 @@ class Order
     }
 
     /**
+     * Create Order Total
+     *
+     * @param $item
+     * @return $this
+     */
+    public function create_order_total($item)
+    {
+        if (! $item instanceof OrderTotal) {
+            $item = OrderTotal::create($item);
+        }
+
+        $this->order_totals[] = $item;
+
+        return $this;
+    }
+
+    /**
      * Create Order Item
      *
      * @param OrderItem $order_item
+     * @deprecated
      * @return $this
      */
     public function add_order_item($order_item)

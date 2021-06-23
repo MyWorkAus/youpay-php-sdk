@@ -73,26 +73,26 @@ class OrderItem
      */
     public static function create($fillable)
     {
-        $order = new self();
-        $order->order_item_id = $fillable['order_item_id'];
-        $order->product_id = $fillable['product_id'];
-        $order->title = $fillable['title'];
-        $order->src = $fillable['src'];
-        $order->price = $fillable['price'];
-        $order->quantity = $fillable['quantity'];
-        $order->total = $fillable['total'];
+        $item = new self();
+        $item->order_item_id = $fillable['order_item_id'];
+        $item->product_id = $fillable['product_id'];
+        $item->title = $fillable['title'];
+        $item->src = $fillable['src'];
+        $item->price = $fillable['price'];
+        $item->quantity = $fillable['quantity'];
+        $item->total = $fillable['total'];
 
         // Option Fields
         if ( ! empty($fillable['description']) ) {
-            $order->description = $fillable['description'];
+            $item->description = $fillable['description'];
         }
         if ( ! empty($fillable['variants'])) {
-            $order->variants = $fillable['variants'];
+            $item->variants = $fillable['variants'];
         }
         if ( ! empty($fillable['variants_display'])) {
-            $order->variants_display = $fillable['variants_display'];
+            $item->variants_display = $fillable['variants_display'];
         }
 
-        return $order;
+        return $item;
     }
 }
